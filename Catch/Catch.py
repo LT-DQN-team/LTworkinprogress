@@ -26,7 +26,7 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
 #define agent
-agent=[pygame.Rect(WINDOWWIDTH/2,WINDOWHEIGHT-HEIGHT_AGENT,20,HEIGHT)]
+rectTest=pygame.Rect(WINDOWWIDTH/2,WINDOWHEIGHT-HEIGHT_AGENT,20,HEIGHT_AGENT)
 
 
 #define directions
