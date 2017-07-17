@@ -6,15 +6,15 @@ Created on Mon Jul 17 13:07:47 2017
 @author: timothee
 """
 
-import pygame, sys, time
+import pygame, sys, time, random
 from pygame.locals import *
+
 
 pygame.init()
 
+
 WINDOWHEIGHT=800
 WINDOWWIDTH=600
-HEIGHT_AGENT=100
-THICKNESS_BOTTOM=10
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
 pygame.display.set_caption('Hello world!')
 
@@ -25,22 +25,66 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
+class Basket():
+    
+    def __init__(self):
+        
+        HEIGHT_AGENT=30
+        THICKNESS_AGENT=10
+        WIDTH_AGENT=80
+        self.agent=list([pygame.Rect(WINDOWWIDTH/2,WINDOWHEIGHT-HEIGHT_AGENT,THICKNESS_AGENT,HEIGHT_AGENT),
+           pygame.Rect(0,WINDOWHEIGHT-THICKNESS_AGENT,WIDTH_AGENT,THICKNESS_AGENT),
+           pygame.Rect(0,WINDOWHEIGHT-HEIGHT_AGENT,THICKNESS_AGENT,HEIGHT_AGENT)])
+        self.agent[1].left=self.agent[0].right
+        self.agent[2].left=self.agent[1].right
+        
+    def moveLeft(self):
+        if self.agent[0].left>0:
+            for compound in self.agent:
+                compound.move_ip(-1,0)
+            
+    def moveRight(self):
+        if self.agent[2].right<WINDOWWIDTH:
+             for compound in self.agent:
+                compound.move_ip(1,0)
+    def drawBasket(self,windowSurface):
+        for compound in self.agent:
+            pygame.draw.rect(windowSurface,RED,compound)
+            
+class FallingObject():
+    
+    def __init__(self,windowSurface,color=BLUE):
+        
+        self.hori_pos=random.random()*WINDOWWIDTH
+        self.mainBody=list(pygame.draw.circle(windowSurface,color,(self.hori_pos,0),5))
+        
+    def refresh(self,windowSurface):
+        for compound in self.mainBody:
+            compound.move_ip(0,-1)      
+     
+    def drawObject(self,windowSurface):
+        for compound in self.mainBody:
+            pygame.draw.rect(windowSurface,self.color,compound)
+    
+    
+        
 #define agent
-rectTest=pygame.Rect(WINDOWWIDTH/2,WINDOWHEIGHT-HEIGHT_AGENT,20,HEIGHT_AGENT)
+basket=Basket()
 
 
-#define directions
-RIGHT=1
-LEFT=2
+
+
 
  # run the game loop
 while True:
     # check for the QUIT 
     
+    
     if (pygame.key.get_pressed()[pygame.K_LEFT])!=0:
-        rectTest=rectTest.move(-1,0)
-       
-        
+        basket.moveLeft()
+    
+    if (pygame.key.get_pressed()[pygame.K_RIGHT])!=0:
+       basket.moveRight()
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
@@ -48,5 +92,5 @@ while True:
             
     
     windowSurface.fill(WHITE)
-    pygame.draw.rect(windowSurface,RED,rectTest)
+    basket.drawBasket(windowSurface)
     pygame.display.update()
