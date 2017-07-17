@@ -53,10 +53,10 @@ class Basket():
             
 class FallingObject():
     
-    def __init__(self,windowSurface,color=BLUE):
-        
-        self.hori_pos=random.random()*WINDOWWIDTH
-        self.mainBody=list(pygame.draw.circle(windowSurface,color,(self.hori_pos,0),5))
+    def __init__(self,windowSurface,given_color=BLUE):
+        self.color=given_color
+        self.hori_pos=int(random.random()*WINDOWWIDTH)
+        self.mainBody=list([pygame.draw.circle(windowSurface,self.color,(self.hori_pos,0),5)])
         
     def refresh(self,windowSurface):
         for compound in self.mainBody:
@@ -70,7 +70,7 @@ class FallingObject():
         
 #define agent
 basket=Basket()
-
+test=FallingObject(windowSurface,BLUE)
 
 
 
@@ -79,7 +79,7 @@ basket=Basket()
 while True:
     # check for the QUIT 
     
-    
+    test.refresh(windowSurface)
     if (pygame.key.get_pressed()[pygame.K_LEFT])!=0:
         basket.moveLeft()
     
@@ -90,7 +90,7 @@ while True:
             pygame.quit()
             sys.exit()
             
-    
+    test.drawObject(windowSurface)
     windowSurface.fill(WHITE)
     basket.drawBasket(windowSurface)
     pygame.display.update()
