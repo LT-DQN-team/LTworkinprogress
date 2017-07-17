@@ -16,7 +16,7 @@ pygame.init()
 WINDOWHEIGHT=800
 WINDOWWIDTH=600
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
-pygame.display.set_caption('Hello world!')
+pygame.display.set_caption('Catch XXL')
 
  # set up the colors
 BLACK = (0, 0, 0)
@@ -41,36 +41,91 @@ class Basket():
     def moveLeft(self):
         if self.agent[0].left>0:
             for compound in self.agent:
-                compound.move_ip(-1,0)
+                compound.move_ip(-10,0)
             
     def moveRight(self):
         if self.agent[2].right<WINDOWWIDTH:
              for compound in self.agent:
-                compound.move_ip(1,0)
+                compound.move_ip(10,0)
     def drawBasket(self,windowSurface):
         for compound in self.agent:
             pygame.draw.rect(windowSurface,RED,compound)
             
-class FallingObject():
+class fallingObject(object):
     
-    def __init__(self,windowSurface,given_color=BLUE):
+    def __init__(self,windowSurface,given_color=BLUE,given_speed=5):
         self.color=given_color
+        self.speed=given_speed
         self.verti_pos=0
         self.hori_pos=int(random.random()*WINDOWWIDTH)
-        print(int(random.random()*WINDOWWIDTH))
+        self.radius=5
+       
         
     def refresh(self):        
-            self.verti_pos+=1      
+            self.verti_pos+=self.speed     
      
     def drawObject(self,windowSurface):       
-            pygame.draw.circle(windowSurface,self.color,(self.hori_pos,self.verti_pos),5)
+            pygame.draw.circle(windowSurface,self.color,(self.hori_pos,self.verti_pos),self.radius)
+class niceObject(fallingObject):
     
+    def __init__(self,windowsSurface,given_speed=5):
+        super(niceObject,self).__init__(windowSurface,GREEN,given_speed)
+        
+    def caught():
+        
+        return 1
     
+class badObject(fallingObject):
+    
+    def __init__(self,windowsSurface,given_speed=5):
+        super(badObject,self).__init__(windowSurface,BLACK,given_speed)
+        
+    def caught():
+        
+        return -1
+    
+class Environment():
+    
+    def __init__(self):
+        
+        pygame.time.set_timer(USEREVENT,1000)   
+        self.ballList=[niceObject(windowSurface)]
+        
+    def refresh(self, basket, windowSurface):
+       for event in pygame.event.get():
+           
+           if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
+           if event.type == USEREVENT:
+               if random.random()<0.5:
+                   self.ballList.append(badObject(windowSurface))
+               else:
+                   self.ballList.append(niceObject(windowSurface)) 
+       for F_object in self.ballList:
+           F_object.drawObject(windowSurface)
+           F_object.refresh()
+           if (F_object.verti_pos - F_object.radius) > WINDOWHEIGHT:
+                #print('Deleted')
+                del F_object
+           elif (((F_object.verti_pos + F_object.radius) == basket.agent[1].top) &
+            ((F_object.hori_pos + F_object.radius) <= basket.agent[2].left) &
+            ((F_object.hori_pos - F_object.radius) >= basket.agent[0].right)):
+               del F_object 
+               return True
+       if (pygame.key.get_pressed()[pygame.K_LEFT])!=0:
+            basket.moveLeft()
+    
+       if (pygame.key.get_pressed()[pygame.K_RIGHT])!=0:
+            basket.moveRight()
+       
         
 #define agent
 basket=Basket()
-test=FallingObject(windowSurface,BLUE)
+test=[badObject(windowSurface)]
+env = Environment()
 
+clock=pygame.time.Clock()
 
 
 
@@ -78,20 +133,19 @@ test=FallingObject(windowSurface,BLUE)
 while True:
     # check for the QUIT 
     
-    test.refresh()
-    if (pygame.key.get_pressed()[pygame.K_LEFT])!=0:
-        basket.moveLeft()
+ 
     
-    if (pygame.key.get_pressed()[pygame.K_RIGHT])!=0:
-       basket.moveRight()
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-            
     
-    windowSurface.fill(WHITE)
-    test.drawObject(windowSurface)
+   
+        
+    windowSurface.fill(WHITE)   
+    collision=env.refresh(basket,windowSurface)
+    if collision:
+        print('Collision detected')       
+    
+    
+    
     basket.drawBasket(windowSurface)
     pygame.display.update()
+    clock.tick(50)
     
