@@ -12,7 +12,7 @@ from pygame.locals import *
 pygame.init()
 
  # set up the window
-windowSurface = pygame.display.set_mode((500, 400), 0, 32)
+windowSurface = pygame.display.set_mode((50, 40), pygame.RESIZABLE, 32)
 pygame.display.set_caption('Hello world!')
 
  # set up the colors
@@ -38,7 +38,7 @@ windowSurface.fill(WHITE)
 pygame.draw.polygon(windowSurface, GREEN, ((146, 0), (291, 106), (236, 277), (56, 277), (0, 106)))
 
  # draw some blue lines onto the surface
-pygame.draw.line(windowSurface, BLUE, (60, 60), (120, 60), 4)
+pygame.draw.line(windowSurface, BLUE, (60, 60), (500,400), 4)
 pygame.draw.line(windowSurface, BLUE, (120, 60), (60, 120))
 pygame.draw.line(windowSurface, BLUE, (60, 120), (120, 120), 4)
 
@@ -53,7 +53,7 @@ pygame.draw.rect(windowSurface, RED, (textRect.left - 20, textRect.top - 20, tex
 
  # get a pixel array of the surface
 pixArray = pygame.PixelArray(windowSurface)
-pixArray[480][380] = BLACK
+pixArray[48][38] = BLACK
 del pixArray
 
  # draw the text onto the surface
