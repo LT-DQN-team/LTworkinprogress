@@ -56,12 +56,12 @@ class Basket():
 
 class fallingObject(object):
     
-    def __init__(self,given_color=BLUE):
+    def __init__(self,given_color=BLUE,given_radius=5):
         self.color=given_color
         self.speed=5
         self.verti_pos=0
         self.hori_pos=int(random.random()*(WINDOWWIDTH-20))+10
-        self.radius=5
+        self.radius=given_radius
        
         
     def refresh(self,*_):        
@@ -95,16 +95,20 @@ class badObject(fallingObject):
 class trackingObject(fallingObject):
     
     def __init__(self):
-        super(trackingObject,self).__init__(RED)
-        self.radius=7
+        super(trackingObject,self).__init__(RED,5)
+        
         self.width=1
         
     def refresh(self,basket):
         self.verti_pos+=self.speed 
         self.hori_pos+=self.speed*((basket.getPosition()>self.hori_pos)*2-1)
+        
                     
     def drawObject(self,windowSurface):       
-        pygame.draw.circle(windowSurface,self.color,(self.hori_pos,self.verti_pos),self.radius,self.width)
+        pygame.draw.circle(windowSurface,self.color,(self.hori_pos,self.verti_pos),self.radius)
+        
+    def caught():
+        return -1
 
 #class bonusObject:
     
@@ -144,13 +148,16 @@ class Environment():
            
     def checkCollision(self,F_object,basket):
          
+         
+        
          if (F_object.getPosition()[1] - F_object.getRadius()) > WINDOWHEIGHT:
                 
                 del F_object
                 return False 
-         elif (((F_object.getPosition()[1] + F_object.getRadius()) == basket.agent[1].top) &
+         if ((F_object.getPosition()[1] +5 == basket.agent[1].top) &
             ((F_object.getPosition()[0] + F_object.getRadius()) <= basket.agent[2].left) &
             ((F_object.getPosition()[0] - F_object.getRadius()) >= basket.agent[0].right)):
+               
                del F_object 
                return True    
            
@@ -188,5 +195,5 @@ while True:
             basket.moveRight()
     basket.drawBasket(windowSurface)
     pygame.display.update()
-    clock.tick(50)
+    clock.tick(70)
     
