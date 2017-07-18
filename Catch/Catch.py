@@ -51,6 +51,9 @@ class Basket():
         for compound in self.agent:
             pygame.draw.rect(windowSurface,BLACK,compound)
             
+    def getPosition(self):
+        return self.agent[1].center[0]
+
 class fallingObject(object):
     
     def __init__(self,given_color=BLUE):
@@ -61,11 +64,17 @@ class fallingObject(object):
         self.radius=5
        
         
-    def refresh(self):        
+    def refresh(self,*_):        
         self.verti_pos+=self.speed     
      
     def drawObject(self,windowSurface):       
         pygame.draw.circle(windowSurface,self.color,(self.hori_pos,self.verti_pos),self.radius)
+        
+    def getPosition(self):
+        return (self.hori_pos,self.verti_pos)
+    
+    def getRadius(self):
+        return self.radius
 class niceObject(fallingObject):
     
     def __init__(self):
@@ -83,22 +92,22 @@ class badObject(fallingObject):
     def caught():
         
         return -1
-class trackingObject(object):
+class trackingObject(fallingObject):
     
     def __init__(self):
-        self.color=BLUE
-        self.speed=4
-        self.verti_pos=0
-        self.hori_pos=int(random.random()*(WINDOWWIDTH-20))+10
+        super(trackingObject,self).__init__(RED)
         self.radius=7
         self.width=1
         
     def refresh(self,basket):
         self.verti_pos+=self.speed 
-        self.hori_pos+=self.speed*((basket.agent[1].center[0]>self.hori_pos)*2-1)
+        self.hori_pos+=self.speed*((basket.getPosition()>self.hori_pos)*2-1)
                     
     def drawObject(self,windowSurface):       
         pygame.draw.circle(windowSurface,self.color,(self.hori_pos,self.verti_pos),self.radius,self.width)
+
+#class bonusObject:
+    
         
 class Environment():
     
@@ -121,21 +130,31 @@ class Environment():
                        self.ballList.append(niceObject()) 
                    else:
                        self.ballList.append(trackingObject())
+                       
        for F_object in self.ballList:
+           
            F_object.drawObject(windowSurface)
-           if type(F_object) is trackingObject: 
-               F_object.refresh(basket)
-           else:
-               F_object.refresh()
-           if (F_object.verti_pos - F_object.radius) > WINDOWHEIGHT:
-                #print('Deleted')
+           F_object.refresh(basket)
+           
+           
+           if self.checkCollision(F_object,basket):
+               print('Collision detected')
+           
+          
+           
+    def checkCollision(self,F_object,basket):
+         
+         if (F_object.getPosition()[1] - F_object.getRadius()) > WINDOWHEIGHT:
+                
                 del F_object
-           elif (((F_object.verti_pos + F_object.radius) == basket.agent[1].top) &
-            ((F_object.hori_pos + F_object.radius) <= basket.agent[2].left) &
-            ((F_object.hori_pos - F_object.radius) >= basket.agent[0].right)):
+                return False 
+         elif (((F_object.getPosition()[1] + F_object.getRadius()) == basket.agent[1].top) &
+            ((F_object.getPosition()[0] + F_object.getRadius()) <= basket.agent[2].left) &
+            ((F_object.getPosition()[0] - F_object.getRadius()) >= basket.agent[0].right)):
                del F_object 
-               return True
-       
+               return True    
+           
+               
        
         
 #define agent
