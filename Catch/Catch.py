@@ -140,15 +140,15 @@ class Environment():
            if event.type == QUIT:
             pygame.quit()
             sys.exit()
-           if n_frames%50==0:
-               if random.random() < 0.3:
-                   self.ballList.append(badObject())
-               else:
-                   if random.random() < 0.7:
-                       self.ballList.append(niceObject()) 
+       if n_frames%10==0:
+           if random.random() < 0.3:
+               self.ballList.append(badObject())
+           else:
+               if random.random() < 0.7:
+                   self.ballList.append(niceObject()) 
 #                   else:
 #                       self.ballList.append(trackingObject())
-                       
+                   
        for F_object in self.ballList:
            
            F_object.drawObject(windowSurface)
@@ -191,7 +191,8 @@ def main(action):
     
     
     global n_frames
-    n_frames+=1            
+    n_frames+=1   
+          
     windowSurface.fill(WHITE)   
     
        
