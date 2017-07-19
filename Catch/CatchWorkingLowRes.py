@@ -185,7 +185,7 @@ clock = pygame.time.Clock()
 
 
  # run the game loop
-def main():
+while True:
     # check for the QUIT 
     
  
