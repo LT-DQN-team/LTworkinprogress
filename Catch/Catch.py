@@ -16,7 +16,8 @@ Created on Mon Jul 17 13:07:47 2017
 
 import pygame, sys, time, random
 from pygame.locals import *
-
+import numpy as np
+import torch
 
 pygame.init()
 
@@ -174,8 +175,10 @@ class Environment():
             ((F_object.getPosition()[0]) >= basket.agent[0].right)):
                return True
                
-    def getEnv(self):
-        return pygame.PixelArray(windowSurface)
+def getEnv():
+        array=np.flipud(pygame.surfarray.pixels3d(windowSurface))
+        array=torch.from_numpy(array)
+        return array
        
 
 
