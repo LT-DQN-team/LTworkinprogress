@@ -129,17 +129,18 @@ class Environment():
     
     def __init__(self):
         
-        pygame.time.set_timer(USEREVENT, 1000)   
+        #pygame.time.set_timer(USEREVENT, 1000)   
         self.ballList=[niceObject()]
         
     def refresh(self, basket, windowSurface):
        reward = 0
+       global n_frames
        for event in pygame.event.get():
            
            if event.type == QUIT:
             pygame.quit()
             sys.exit()
-           if event.type == USEREVENT:
+           if n_frames%50==0:
                if random.random() < 0.3:
                    self.ballList.append(badObject())
                else:
@@ -182,13 +183,15 @@ basket = Basket()
     
 env = Environment()
 clock = pygame.time.Clock()
+n_frames=0
 
 def main(action):     
     reward=0
     
     
     
-            
+    global n_frames
+    n_frames+=1            
     windowSurface.fill(WHITE)   
     
        
