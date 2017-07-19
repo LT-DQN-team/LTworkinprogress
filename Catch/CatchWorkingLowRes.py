@@ -21,8 +21,8 @@ from pygame.locals import *
 pygame.init()
 
 
-WINDOWHEIGHT=800
-WINDOWWIDTH=600
+WINDOWHEIGHT=64
+WINDOWWIDTH=64
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
 pygame.display.set_caption('Catch XXL')
 
@@ -37,9 +37,9 @@ class Basket():
     
     def __init__(self):
         
-        HEIGHT_AGENT = 30
-        THICKNESS_AGENT = 10
-        WIDTH_AGENT = 80
+        HEIGHT_AGENT = 4
+        THICKNESS_AGENT = 2
+        WIDTH_AGENT = 5
         self.agent=list([pygame.Rect(WINDOWWIDTH/2,WINDOWHEIGHT-HEIGHT_AGENT,THICKNESS_AGENT,HEIGHT_AGENT),
            pygame.Rect(0,WINDOWHEIGHT-THICKNESS_AGENT,WIDTH_AGENT,THICKNESS_AGENT),
            pygame.Rect(0,WINDOWHEIGHT-HEIGHT_AGENT,THICKNESS_AGENT,HEIGHT_AGENT)])
@@ -49,12 +49,12 @@ class Basket():
     def moveLeft(self):
         if self.agent[0].left > 0:
             for compound in self.agent:
-                compound.move_ip(-10, 0)
+                compound.move_ip(-4, 0)
             
     def moveRight(self):
         if self.agent[2].right<WINDOWWIDTH:
              for compound in self.agent:
-                compound.move_ip(10, 0)
+                compound.move_ip(4, 0)
     def drawBasket(self,windowSurface):
         for compound in self.agent:
             pygame.draw.rect(windowSurface,BLACK,compound)
@@ -64,9 +64,9 @@ class Basket():
 
 class fallingObject(object):
     
-    def __init__(self,given_color=BLUE, given_radius = 5):
+    def __init__(self,given_color=BLUE, given_radius = 2):
         self.color=given_color
-        self.speed= 5
+        self.speed= 2
         self.verti_pos= 0
         self.hori_pos=int(random.random() * (WINDOWWIDTH - 20)) + 10
         self.radius=given_radius
@@ -103,7 +103,7 @@ class badObject(fallingObject):
 class trackingObject(fallingObject):
     
     def __init__(self):
-        super(trackingObject,self).__init__(RED, 7)
+        super(trackingObject,self).__init__(RED, 2)
         
         self.width = 1
         
@@ -143,8 +143,8 @@ class Environment():
                else:
                    if random.random() < 0.7:
                        self.ballList.append(niceObject()) 
-                   else:
-                       self.ballList.append(trackingObject())
+#                   else:
+#                       self.ballList.append(trackingObject())
                        
        for F_object in self.ballList:
            
@@ -166,9 +166,9 @@ class Environment():
                 
                 del F_object
                 return False 
-         elif (((F_object.getPosition()[1] + 5) == basket.agent[1].top) &
-            ((F_object.getPosition()[0] + 5) <= basket.agent[2].left) &
-            ((F_object.getPosition()[0] - 5) >= basket.agent[0].right)):
+         elif (((F_object.getPosition()[1]) == basket.agent[1].top) &
+            ((F_object.getPosition()[0]) <= basket.agent[2].left) &
+            ((F_object.getPosition()[0]) >= basket.agent[0].right)):
                return True
                
     def getEnv(self):
