@@ -23,7 +23,7 @@ from collections import namedtuple
 #if is_ipython:
 #    from IPython import display
 
-#ByteTensor = torch.cuda.ByteTensor if use_cuda else torch.ByteTensor
+#FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 Transition = namedtuple('Transition',('state','action','next_state','reward'))
 use_cuda = torch.cuda.is_available()
 FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
@@ -61,13 +61,31 @@ class DQN(nn.Module):
         self.bn2 = nn.BatchNorm2d(32)
         self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
         self.bn3 = nn.BatchNorm2d(32)
-        self.head = nn.Linear(448, 2)
+        self.head = nn.Linear(800, 2)
 
     def forward(self,x):
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
+        print(x.size())
+        
         return self.head(x.view(x.size(0), -1))
+
+
+def get_screen():
+    screen = Catch.getEnv().transpose((2, 0, 1))
+    # Strip off the top and bottom of the screen
+    
+   
+   
+    # Convert to float, rescare, convert to torch tensor
+    # (this doesn't require a copy)  
+    screen = np.ascontiguousarray(screen, dtype = np.float32) / 255
+    screen = torch.from_numpy(screen)
+    # Resize, and add a batch dimension (BCHW)
+    screen = screen.unsqueeze(0).type(Tensor)
+    print(screen.size())
+    return screen
 
 """Training"""
 BATCH_SIZE = 128
@@ -97,7 +115,7 @@ def select_action(state):
     if sample > eps_threshold:
         return model(Variable(state, volatile=True).type(FloatTensor)).data.max(1)[1]
     else:
-        return LongTensor([[random.randrange(2)]])
+        return LongTensor([[random.randrange(1, 2)]])
     
 episode_durations= []
 
@@ -171,21 +189,24 @@ def optimize_model():
     optimizer.step()
     
 num_frames = 1000
+last_screen = get_screen()
+current_screen = get_screen()
+state = current_screen - last_screen
 for i_frames in range(num_frames):
     # Initialize the environment and state
-   
-    last_screen = Catch.getEnv()
-    current_screen = last_screen
-    state = current_screen - last_screen
-   
+#    last_screen = Catch.getEnv()
+#    current_screen = Catch.getEnv()
+#    state = current_screen - last_screen
     # Select and perform an action
     action = select_action(state)
+    print('Here1')
     reward = Catch.main(action[0, 0])
+    print('Here2')
     reward = Tensor([reward])
 
     # Observe new state
     last_screen = current_screen
-    current_screen = Catch.getEnv()
+    current_screen = get_screen()
     
     next_state = current_screen - last_screen
     
@@ -198,9 +219,3 @@ for i_frames in range(num_frames):
 
     # Perform one step of the optimization (on the target network)
     optimize_model()
-        
-
-while True:
-    
-    Catch.main(input("Command?"))
-    print Catch.getEnv()

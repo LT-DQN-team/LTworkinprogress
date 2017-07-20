@@ -176,8 +176,7 @@ class Environment():
                return True
                
 def getEnv():
-        array=np.flipud(pygame.surfarray.pixels3d(windowSurface))
-        array=torch.from_numpy(array)
+        array = np.array(pygame.surfarray.pixels3d(windowSurface))
         return array
        
 
