@@ -28,7 +28,10 @@ from IPython import display
 #    from IPython import display
 
 #FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
+<<<<<<< HEAD
 
+=======
+>>>>>>> 7082a2f7c4524aded61bec3c67d95f6a83874506
 Transition = namedtuple('Transition',('state','action','next_state','reward'))
 use_cuda = torch.cuda.is_available()
 #use_cuda=False
@@ -66,6 +69,7 @@ class DQN(nn.Module):
 
     def __init__(self):
         super(DQN,self).__init__()
+
         self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2).cuda()
         
         self.bn1 = nn.BatchNorm2d(16).cuda()
@@ -77,10 +81,12 @@ class DQN(nn.Module):
         
         self.head = nn.Linear(800, 3).cuda()
 
+
     def forward(self,x):
         x=x.cuda()
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
+
 #        x = F.relu(self.bn3(self.conv3(x)))
         
         x=F.relu(self.inter1(x.view(x.size(0),-1)))
@@ -101,6 +107,23 @@ def get_screen():
     # Resize, and add a batch dimension (BCHW)
     screen = screen.unsqueeze(0).type(Tensor)
     
+    return screen
+
+
+
+def get_screen():
+    screen = Catch.getEnv().transpose((2, 0, 1))
+    # Strip off the top and bottom of the screen
+    
+   
+   
+    # Convert to float, rescare, convert to torch tensor
+    # (this doesn't require a copy)  
+    screen = np.ascontiguousarray(screen, dtype = np.float32) / 255
+    screen = torch.from_numpy(screen)
+    # Resize, and add a batch dimension (BCHW)
+    screen = screen.unsqueeze(0).type(Tensor)
+    print(screen.size())
     return screen
 
 """Training"""
@@ -131,10 +154,12 @@ def select_action(state):
     if sample > eps_threshold:
         return model(Variable(state, volatile=True).type(FloatTensor)).data.max(1)[1].view(1, 1)
     else:
+
         action = LongTensor([[random.randrange(3)]])
         
         return action
     
+
     
 episode_durations= []
 
@@ -210,6 +235,7 @@ def optimize_model():
     
 
 
+
 def plotValues(green_balls,red_balls):
     global score
     global lossCollect
@@ -243,18 +269,8 @@ state = current_screen - last_screen
 last_frame=0
 green_balls=0
 red_balls=0
-for i_frames in range(num_frames):
-    # Initialize the environment and state
-#    last_screen = Catch.getEnv()
-#    current_screen = Catch.getEnv()
-#    state = current_screen - last_screen
-    # Select and perform an action
-    
-    
-    
-        
-    
-    action = select_action(state)
+
+
    
     reward = Catch.main(action[0, 0])
    
@@ -274,7 +290,7 @@ for i_frames in range(num_frames):
         lossCollect.append(sum(lossBuffer)/500)
         lossBuffer=[]
             
-            
+
     reward = Tensor([reward])
     # Observe new state
     last_screen = current_screen
@@ -291,4 +307,4 @@ for i_frames in range(num_frames):
 
     # Perform one step of the optimization (on the target network)
     optimize_model()
-    
+
