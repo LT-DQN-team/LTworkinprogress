@@ -18,6 +18,19 @@ import pygame, sys, time, random
 from pygame.locals import *
 import numpy as np
 import torch
+import torch.nn as nn
+
+
+
+
+
+
+import torch.optim as optim
+import torch.nn.functional as F
+from torch.autograd import Variable
+from collections import namedtuple
+
+import torchvision.transforms as T
 
 pygame.init()
 
@@ -42,7 +55,7 @@ class Basket():
         
         HEIGHT_AGENT = 4
         THICKNESS_AGENT = 2
-        WIDTH_AGENT = 5
+        WIDTH_AGENT = 10
         self.agent=list([pygame.Rect(WINDOWWIDTH/2,WINDOWHEIGHT-HEIGHT_AGENT,THICKNESS_AGENT,HEIGHT_AGENT),
            pygame.Rect(0,WINDOWHEIGHT-THICKNESS_AGENT,WIDTH_AGENT,THICKNESS_AGENT),
            pygame.Rect(0,WINDOWHEIGHT-HEIGHT_AGENT,THICKNESS_AGENT,HEIGHT_AGENT)])
@@ -93,7 +106,7 @@ class niceObject(fallingObject):
         
     def caught(self):
         
-        return 1
+        return 2
     
 class badObject(fallingObject):
     
@@ -134,6 +147,7 @@ class Environment():
         self.ballList=[niceObject()]
         
     def refresh(self, basket, windowSurface):
+       non_collided=[] 
        reward = 0
        global n_frames
        for event in pygame.event.get():
@@ -141,14 +155,15 @@ class Environment():
            if event.type == QUIT:
             pygame.quit()
             sys.exit()
-       if n_frames%10==0:
-           if random.random() < 0.3:
-               self.ballList.append(badObject())
-           else:
-               if random.random() < 0.7:
-                   self.ballList.append(niceObject()) 
-#                   else:
-#                       self.ballList.append(trackingObject())
+       if n_frames%20==0:
+           self.ballList.append(niceObject()) 
+#           if random.random() < 0.3:
+#               self.ballList.append(badObject())
+#           else:
+#               if random.random() < 0.7:
+#                   self.ballList.append(niceObject()) 
+##                   else:
+##                       self.ballList.append(trackingObject())
                    
        for F_object in self.ballList:
            
@@ -158,26 +173,31 @@ class Environment():
            
            if self.checkCollision(F_object,basket):
                reward+= F_object.caught()
-               print(reward)
-               del F_object 
                
+               
+           elif (F_object.getPosition()[1]) > WINDOWHEIGHT:
+               reward -=0.1
+           else:
+               non_collided.append(F_object)
+       self.ballList=non_collided      
+       
        return reward
           
            
     def checkCollision(self,F_object,basket):
          
-         if (F_object.getPosition()[1] - F_object.getRadius()) > WINDOWHEIGHT:
-                
-                del F_object
-                return False 
-         elif (((F_object.getPosition()[1]) == basket.agent[1].top) &
+        
+         if (((F_object.getPosition()[1]) >= basket.agent[0].top) &
             ((F_object.getPosition()[0]) <= basket.agent[2].left) &
             ((F_object.getPosition()[0]) >= basket.agent[0].right)):
                return True
+         else:
+                
+                
+               return False
                
 def getEnv():
-        array=np.flipud(pygame.surfarray.pixels3d(windowSurface))
-        array=torch.from_numpy(array)
+        array = np.array(pygame.surfarray.pixels3d(windowSurface))
         return array
        
 
@@ -201,11 +221,11 @@ def main(action):
        
     
     
-    if (action==1):
+    if (action==0):
             basket.moveLeft()
             
     
-    elif (action==2):
+    elif (action==1):
             basket.moveRight()
             
     reward=env.refresh(basket,windowSurface)        

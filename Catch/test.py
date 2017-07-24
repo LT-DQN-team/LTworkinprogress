@@ -16,6 +16,10 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 from collections import namedtuple
+import pygame
+import matplotlib
+import matplotlib.pyplot as plt
+from IPython import display
 
 
 #is_ipython='inline' in matplotlib.get_backend()
@@ -23,14 +27,21 @@ from collections import namedtuple
 #if is_ipython:
 #    from IPython import display
 
-#ByteTensor = torch.cuda.ByteTensor if use_cuda else torch.ByteTensor
+#FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
+
 Transition = namedtuple('Transition',('state','action','next_state','reward'))
 use_cuda = torch.cuda.is_available()
+#use_cuda=False
+
+
 FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 LongTensor = torch.cuda.LongTensor if use_cuda else torch.LongTensor
 ByteTensor = torch.cuda.ByteTensor if use_cuda else torch.ByteTensor
+
 Tensor = FloatTensor
 
+lastTime=0
+score=[]
 class ReplayMemory(object):
     
     def __init__(self,capacity):
@@ -55,26 +66,49 @@ class DQN(nn.Module):
 
     def __init__(self):
         super(DQN,self).__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
-        self.bn1 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-        self.bn3 = nn.BatchNorm2d(32)
-        self.head = nn.Linear(448, 2)
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2).cuda()
+        
+        self.bn1 = nn.BatchNorm2d(16).cuda()
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2).cuda()
+        self.bn2 = nn.BatchNorm2d(32).cuda()
+#        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
+#        self.bn3 = nn.BatchNorm2d(32)
+        self.inter1 = nn.Linear(5408,800).cuda()
+        
+        self.head = nn.Linear(800, 3).cuda()
 
     def forward(self,x):
+        x=x.cuda()
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        return self.head(x.view(x.size(0), -1))
+#        x = F.relu(self.bn3(self.conv3(x)))
+        
+        x=F.relu(self.inter1(x.view(x.size(0),-1)))
+        
+        return self.head(x)
+
+
+def get_screen():
+    screen = Catch.getEnv().transpose((2, 0, 1))
+    # Strip off the top and bottom of the screen
+    
+   
+   
+    # Convert to float, rescare, convert to torch tensor
+    # (this doesn't require a copy)  
+    screen = np.ascontiguousarray(screen, dtype = np.float32) / 255
+    screen = torch.from_numpy(screen)
+    # Resize, and add a batch dimension (BCHW)
+    screen = screen.unsqueeze(0).type(Tensor)
+    
+    return screen
 
 """Training"""
 BATCH_SIZE = 128
 GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
-EPS_DECAY = 200
+EPS_DECAY = 2000
 
 model = DQN()
 
@@ -95,9 +129,12 @@ def select_action(state):
         math.exp(-1. *steps_done / EPS_DECAY)
     steps_done += 1
     if sample > eps_threshold:
-        return model(Variable(state, volatile=True).type(FloatTensor)).data.max(1)[1]
+        return model(Variable(state, volatile=True).type(FloatTensor)).data.max(1)[1].view(1, 1)
     else:
-        return LongTensor([[random.randrange(2)]])
+        action = LongTensor([[random.randrange(3)]])
+        
+        return action
+    
     
 episode_durations= []
 
@@ -122,7 +159,8 @@ episode_durations= []
 #    
 #last_sync = 0
 #
-
+lossCollect=[]
+lossBuffer=[]
 def optimize_model():
     global last_sync
     if len(memory) < BATCH_SIZE:
@@ -170,22 +208,77 @@ def optimize_model():
         param.grad.data.clamp_(-1, 1)
     optimizer.step()
     
-num_frames = 1000
+
+
+def plotValues(green_balls,red_balls):
+    global score
+    global lossCollect
+    plt.figure(1)
+    plt.clf()
+    plt.subplot(211)
+    
+    plt.xlabel('Time (X500 frames)')
+    plt.ylabel('Green balls in 500 frames')   
+    score.append(green_balls)
+    plt.plot(score)
+    
+    
+    plt.subplot(212)
+    plt.plot(lossCollect)
+    plt.xlabel('Time (X500 frames)')
+    plt.ylabel('Loss in 500 frames')
+    
+    
+    plt.pause(0.001)  # pause a bit so that plots are updated
+
+    display.clear_output(wait=True)
+    display.display(plt.gcf())
+   
+
+    
+num_frames = 100000
+last_screen = get_screen()
+current_screen = get_screen()
+state = current_screen - last_screen
+last_frame=0
+green_balls=0
+red_balls=0
 for i_frames in range(num_frames):
     # Initialize the environment and state
-   
-    last_screen = Catch.getEnv()
-    current_screen = last_screen
-    state = current_screen - last_screen
-   
+#    last_screen = Catch.getEnv()
+#    current_screen = Catch.getEnv()
+#    state = current_screen - last_screen
     # Select and perform an action
+    
+    
+    
+        
+    
     action = select_action(state)
+   
     reward = Catch.main(action[0, 0])
+   
+    
+    if ((i_frames-last_frame)%500)!=0:
+        if reward == 2:
+            green_balls+=1
+        elif reward == -1:
+            red_balls=0
+    else:
+        
+        plotValues(green_balls,red_balls)
+        last_frame=i_frames
+        green_balls=0
+        red_balls=0
+        
+        lossCollect.append(sum(lossBuffer)/500)
+        lossBuffer=[]
+            
+            
     reward = Tensor([reward])
-
     # Observe new state
     last_screen = current_screen
-    current_screen = Catch.getEnv()
+    current_screen = get_screen()
     
     next_state = current_screen - last_screen
     
@@ -198,9 +291,4 @@ for i_frames in range(num_frames):
 
     # Perform one step of the optimization (on the target network)
     optimize_model()
-        
-
-while True:
     
-    Catch.main(input("Command?"))
-    print Catch.getEnv()
