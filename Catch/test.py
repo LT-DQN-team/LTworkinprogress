@@ -28,13 +28,10 @@ from IPython import display
 #    from IPython import display
 
 #FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
-<<<<<<< HEAD
 
-=======
->>>>>>> 7082a2f7c4524aded61bec3c67d95f6a83874506
 Transition = namedtuple('Transition',('state','action','next_state','reward'))
 use_cuda = torch.cuda.is_available()
-#use_cuda=False
+
 
 
 FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
@@ -70,20 +67,21 @@ class DQN(nn.Module):
     def __init__(self):
         super(DQN,self).__init__()
 
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2).cuda()
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=8, stride=4, padding = 2)
         
-        self.bn1 = nn.BatchNorm2d(16).cuda()
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2).cuda()
-        self.bn2 = nn.BatchNorm2d(32).cuda()
+        self.bn1 = nn.BatchNorm2d(16)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=4, stride=2, padding = 1)
+        self.bn2 = nn.BatchNorm2d(32)
 #        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
 #        self.bn3 = nn.BatchNorm2d(32)
-        self.inter1 = nn.Linear(5408,800).cuda()
         
-        self.head = nn.Linear(800, 3).cuda()
+        self.inter1 = nn.Linear(2048,800)
+        
+        self.head = nn.Linear(800, 3)
 
 
     def forward(self,x):
-        x=x.cuda()
+        
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
 
@@ -111,20 +109,7 @@ def get_screen():
 
 
 
-def get_screen():
-    screen = Catch.getEnv().transpose((2, 0, 1))
-    # Strip off the top and bottom of the screen
-    
-   
-   
-    # Convert to float, rescare, convert to torch tensor
-    # (this doesn't require a copy)  
-    screen = np.ascontiguousarray(screen, dtype = np.float32) / 255
-    screen = torch.from_numpy(screen)
-    # Resize, and add a batch dimension (BCHW)
-    screen = screen.unsqueeze(0).type(Tensor)
-    print(screen.size())
-    return screen
+
 
 """Training"""
 BATCH_SIZE = 128
@@ -135,11 +120,11 @@ EPS_DECAY = 2000
 
 model = DQN()
 
-#if use_cuda:
-#    model.cuda()
+if use_cuda:
+    model.cuda()
     
-optimizer = optim.RMSprop(model.parameters())
-memory = ReplayMemory(10000)
+optimizer = optim.RMSprop(model.parameters(),lr=0.002)
+memory = ReplayMemory(1000)
 
 
 steps_done = 0
@@ -152,6 +137,7 @@ def select_action(state):
         math.exp(-1. *steps_done / EPS_DECAY)
     steps_done += 1
     if sample > eps_threshold:
+#        print('After ',steps_done,' : ',model(Variable(state, volatile=True).type(FloatTensor)).data.max(1))
         return model(Variable(state, volatile=True).type(FloatTensor)).data.max(1)[1].view(1, 1)
     else:
 
@@ -208,13 +194,16 @@ def optimize_model():
     state_batch = Variable(torch.cat(batch.state))
     action_batch = Variable(torch.cat(batch.action))
     reward_batch = Variable(torch.cat(batch.reward))
-
+    
     # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
     # columns of actions taken
     state_action_values = model(state_batch).gather(1, action_batch)
-
+    
+    
     # Compute V(s_{t+1}) for all next states.
     next_state_values = Variable(torch.zeros(BATCH_SIZE).type(Tensor))
+    
+    
     next_state_values[non_final_mask] = model(non_final_next_states).max(1)[0]
     # Now, we don't want to mess up the loss with a volatile flag, so let's
     # clear it. After this, we'll just end up with a Variable that has
@@ -224,8 +213,10 @@ def optimize_model():
     expected_state_action_values = (next_state_values * GAMMA) + reward_batch
 
     # Compute Huber loss
+    
     loss = F.smooth_l1_loss(state_action_values, expected_state_action_values)
-
+    global lossBuffer
+    lossBuffer.append(loss.cpu().data.numpy())
     # Optimize the model
     optimizer.zero_grad()
     loss.backward()
@@ -236,75 +227,90 @@ def optimize_model():
 
 
 
-def plotValues(green_balls,red_balls):
+def plotValues(green_balls):
     global score
     global lossCollect
     plt.figure(1)
     plt.clf()
     plt.subplot(211)
     
-    plt.xlabel('Time (X500 frames)')
-    plt.ylabel('Green balls in 500 frames')   
-    score.append(green_balls)
-    plt.plot(score)
+    plt.xlabel('Episode number')
+    plt.ylabel('Green balls in one episode')   
+    
+    plt.plot(green_balls)
     
     
     plt.subplot(212)
     plt.plot(lossCollect)
-    plt.xlabel('Time (X500 frames)')
-    plt.ylabel('Loss in 500 frames')
+    plt.xlabel('Episode number')
+    plt.ylabel('Loss in episode')
     
     
     plt.pause(0.001)  # pause a bit so that plots are updated
-
+    
     display.clear_output(wait=True)
     display.display(plt.gcf())
    
-
-    
-num_frames = 100000
+num_episodes = 100000
 last_screen = get_screen()
 current_screen = get_screen()
 state = current_screen - last_screen
 last_frame=0
-green_balls=0
-red_balls=0
+green_balls=[]
 
-
-   
-    reward = Catch.main(action[0, 0])
-   
+for i_episodes in range(num_episodes):
     
-    if ((i_frames-last_frame)%500)!=0:
-        if reward == 2:
-            green_balls+=1
-        elif reward == -1:
-            red_balls=0
-    else:
-        
-        plotValues(green_balls,red_balls)
-        last_frame=i_frames
-        green_balls=0
-        red_balls=0
-        
-        lossCollect.append(sum(lossBuffer)/500)
-        lossBuffer=[]
-            
-
-    reward = Tensor([reward])
-    # Observe new state
-    last_screen = current_screen
+    green_balls_temp=0
+    lossBuffer=[]
+    missed=False
+    done=False
+    last_screen = get_screen()
     current_screen = get_screen()
+    state=current_screen
+    while not missed:
+        action = select_action(state)
+        
+        reward = Catch.main(action[0, 0])
+        
+           
+            
+        
+        if reward == 2:
+            green_balls_temp+=1
+        elif reward == -1:
+            missed=True
+        
+        
+                
+            
+                
+        
+            
+        reward = Tensor([reward])
+        # Observe new state
+        last_screen = current_screen
+        current_screen = get_screen()
+        if(missed):
+            next_state=None
+        else:
+            next_state = current_screen
+        
+        
+        # Store the transition in memory
+        memory.push(state, action, next_state, reward)
+        
+        # Move to the next state
+        state = next_state
+        
+        # Perform one step of the optimization (on the target network)
+        optimize_model()
+
+
+    lossCollect.append(sum(lossBuffer)/(len(lossBuffer)+1))        
+    green_balls.append(green_balls_temp)    
+    if i_episodes % 50==0:    
+        plotValues(green_balls)
     
-    next_state = current_screen - last_screen
+
+    # Initialize the environment and state
     
-
-    # Store the transition in memory
-    memory.push(state, action, next_state, reward)
-
-    # Move to the next state
-    state = next_state
-
-    # Perform one step of the optimization (on the target network)
-    optimize_model()
-

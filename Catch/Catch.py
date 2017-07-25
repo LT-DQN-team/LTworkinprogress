@@ -160,10 +160,10 @@ class Environment():
 #           if random.random() < 0.3:
 #               self.ballList.append(badObject())
 #           else:
-#               if random.random() < 0.7:
+#               if random.random() <= 1:
 #                   self.ballList.append(niceObject()) 
-##                   else:
-##                       self.ballList.append(trackingObject())
+#                   else:
+#                       self.ballList.append(trackingObject())
                    
        for F_object in self.ballList:
            
@@ -176,7 +176,8 @@ class Environment():
                
                
            elif (F_object.getPosition()[1]) > WINDOWHEIGHT:
-               reward -=0.1
+               reward -=1
+               
            else:
                non_collided.append(F_object)
        self.ballList=non_collided      
