@@ -17,9 +17,11 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from collections import namedtuple
 import pygame
+from pygame.locals import *
 import matplotlib
 import matplotlib.pyplot as plt
 from IPython import display
+import sys
 
 
 #is_ipython='inline' in matplotlib.get_backend()
@@ -75,9 +77,9 @@ class DQN(nn.Module):
 #        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
 #        self.bn3 = nn.BatchNorm2d(32)
         
-        self.inter1 = nn.Linear(2048,800)
-        
-        self.head = nn.Linear(800, 3)
+        self.inter1 = nn.Linear(2048,1024)
+        self.inter2 = nn.Linear(1024,512)
+        self.head = nn.Linear(512, 3)
 
 
     def forward(self,x):
@@ -88,6 +90,7 @@ class DQN(nn.Module):
 #        x = F.relu(self.bn3(self.conv3(x)))
         
         x=F.relu(self.inter1(x.view(x.size(0),-1)))
+        x=F.relu(self.inter2(x.view(x.size(0),-1)))
         
         return self.head(x)
 
@@ -112,19 +115,19 @@ def get_screen():
 
 
 """Training"""
-BATCH_SIZE = 128
+BATCH_SIZE = 400
 GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
-EPS_DECAY = 2000
+EPS_DECAY = 200
 
 model = DQN()
 
 if use_cuda:
     model.cuda()
     
-optimizer = optim.RMSprop(model.parameters(),lr=0.002)
-memory = ReplayMemory(1000)
+optimizer = optim.RMSprop(model.parameters(),lr=0.001)
+memory = ReplayMemory(7000)
 
 
 steps_done = 0
@@ -224,92 +227,128 @@ def optimize_model():
         param.grad.data.clamp_(-1, 1)
     optimizer.step()
     
-
-
-
-def plotValues(green_balls):
+def test():
+    
+    current_screen = get_screen()
+    state = current_screen
+    Q_values=[]
+    for i_frame in range(1000):
+        
+        
+        
+        action = LongTensor([[random.randrange(3)]])     
+        reward,flag = Catch.main(action[0, 0])
+        state=Variable(Tensor(state))
+        Q=model(state).max(1)[0].data[0,0]
+        
+        current_screen = get_screen()
+        state=current_screen
+        
+        Q_values.append(Q)
+        
+    return Q_values
+def plotValues(Reward_List,Q_Values,green_balls,episode_durations):
     global score
     global lossCollect
     plt.figure(1)
     plt.clf()
-    plt.subplot(211)
     
+    plt.subplot(411)    
     plt.xlabel('Episode number')
-    plt.ylabel('Green balls in one episode')   
-    
+    plt.ylabel('Green balls in one episode')     
     plt.plot(green_balls)
     
     
-    plt.subplot(212)
+    plt.subplot(412)
+    plt.plot(Reward_List)
+    plt.xlabel('Episode number')
+    plt.ylabel('Net score')
+    
+    plt.subplot(413)
     plt.plot(lossCollect)
     plt.xlabel('Episode number')
     plt.ylabel('Loss in episode')
     
+    plt.subplot(414)
+    plt.plot(Q_Values)
+    plt.xlabel('Frame number in test sequence')
+    plt.ylabel('Q Values') 
     
     plt.pause(0.001)  # pause a bit so that plots are updated
     
     display.clear_output(wait=True)
-    display.display(plt.gcf())
+    fig=plt.gcf()
+    
+    fig.set_size_inches(14, 10.5)
+    display.display(fig)
    
 num_episodes = 100000
 last_screen = get_screen()
 current_screen = get_screen()
-state = current_screen - last_screen
-last_frame=0
+state = current_screen
+red_balls=[]
 green_balls=[]
+episode_durations=[]
+Reward_List=[]
 
 for i_episodes in range(num_episodes):
-    
+    Reward_Buffer=0
     green_balls_temp=0
+    red_balls_temp=0
     lossBuffer=[]
-    missed=False
+    Failed=False
     done=False
     last_screen = get_screen()
     current_screen = get_screen()
     state=current_screen
-    while not missed:
+    last_frame=0
+    
+    while not Failed:
+        
         action = select_action(state)
         
-        reward = Catch.main(action[0, 0])
-        
-           
+        reward,flag = Catch.main(action[0, 0])
+        Reward_Buffer += reward
+        last_frame+=1  
             
         
         if reward == 2:
             green_balls_temp+=1
         elif reward == -1:
-            missed=True
-        
-        
-                
             
+            if flag is 'Missed':
                 
-        
-            
+                Failed=True                
+       
         reward = Tensor([reward])
         # Observe new state
         last_screen = current_screen
         current_screen = get_screen()
-        if(missed):
+        if(Failed):
             next_state=None
         else:
-            next_state = current_screen
-        
+            next_state = current_screen       
         
         # Store the transition in memory
-        memory.push(state, action, next_state, reward)
-        
+        memory.push(state, action, next_state, reward)        
         # Move to the next state
-        state = next_state
-        
+        state = next_state        
         # Perform one step of the optimization (on the target network)
         optimize_model()
-
-
+        for event in pygame.event.get():
+           
+           if event.type == QUIT:
+            torch.save(model,'Network')
+            pygame.quit()
+            sys.exit()
+    Reward_List.append(Reward_Buffer+1)
     lossCollect.append(sum(lossBuffer)/(len(lossBuffer)+1))        
-    green_balls.append(green_balls_temp)    
-    if i_episodes % 50==0:    
-        plotValues(green_balls)
+    green_balls.append(green_balls_temp)
+#    red_balls.append(red_balls_temp)
+    episode_durations.append(last_frame)    
+    if (i_episodes % 50==0):    
+        Q_values=test()
+        plotValues(Reward_List,Q_values,green_balls,episode_durations)
     
 
     # Initialize the environment and state

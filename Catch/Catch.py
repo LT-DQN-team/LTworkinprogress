@@ -149,19 +149,16 @@ class Environment():
     def refresh(self, basket, windowSurface):
        non_collided=[] 
        reward = 0
+       flag=''
        global n_frames
-       for event in pygame.event.get():
-           
-           if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
+       
        if n_frames%20==0:
-           self.ballList.append(niceObject()) 
-#           if random.random() < 0.3:
-#               self.ballList.append(badObject())
-#           else:
+           
+           if random.random() < 0.3:
+               self.ballList.append(badObject())
+           else:
 #               if random.random() <= 1:
-#                   self.ballList.append(niceObject()) 
+                   self.ballList.append(niceObject()) 
 #                   else:
 #                       self.ballList.append(trackingObject())
                    
@@ -173,16 +170,18 @@ class Environment():
            
            if self.checkCollision(F_object,basket):
                reward+= F_object.caught()
+               flag='Caught'
                
                
-           elif (F_object.getPosition()[1]) > WINDOWHEIGHT:
+           elif ((F_object.getPosition()[1]) > WINDOWHEIGHT)&(isinstance(F_object,niceObject)):
+               flag='Missed'
                reward -=1
                
            else:
                non_collided.append(F_object)
        self.ballList=non_collided      
        
-       return reward
+       return reward,flag
           
            
     def checkCollision(self,F_object,basket):
