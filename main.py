@@ -23,8 +23,9 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 import matplotlib
-import matplotlib.pyplot as plt
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from IPython import display
 
 ################## Initialize game ############################################
