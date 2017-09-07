@@ -265,9 +265,9 @@ def plotValues():
     
     
     score.append(net_score)    
-    
+    plt.ioff()#off display
     plt.figure(1)
-    plt.clf()
+#    plt.clf()
     
     
     
