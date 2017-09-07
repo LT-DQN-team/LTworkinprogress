@@ -299,7 +299,7 @@ def plotValues():
     fig=plt.gcf()
     
     fig.set_size_inches(8, 15)
-    display.display(fig)
+    fig.savefig('graphs/graph.PNG')
 
 def testNetwork():
     global model
