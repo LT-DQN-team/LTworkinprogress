@@ -254,7 +254,7 @@ def PerformanceTest():
         if not game.is_episode_finished():
             state = assembleState(game.get_state())
         Q_values.append(Q)
-        print(type(Q[0]))
+        
     
     game.set_episode_timeout(storeDefTimeout)    
     return game.get_total_reward(), Q_values   
@@ -323,7 +323,7 @@ for i in range(EPISODES):
         oracle()
         action = selectAction(state)        
         reward = game.make_action(action[0],4) #pass action[0], understanble by Vizdoom
-        print(reward)
+       
         reward = Tensor([reward]) #wrap reward in Tensor for optimizer
         if game.is_episode_finished():
             next_state = None
