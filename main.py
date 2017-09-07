@@ -327,6 +327,7 @@ for i in range(EPISODES):
             next_state = None
         else :
             next_state = assembleState(game.get_state())
+        print(type(state),type(action[1]),type(next_state),type(reward))
         mems[current_scenario].push(state,action[1],next_state,reward)# Store action[1], understandable by Pytorch
         state = next_state
         optimize_model()
