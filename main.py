@@ -22,7 +22,9 @@ from copy import deepcopy
 import torch.optim as optim
 import torch.nn.functional as F
 
+import matplotlib
 import matplotlib.pyplot as plt
+matplotlib.use('Agg')
 from IPython import display
 
 ################## Initialize game ############################################
@@ -273,7 +275,7 @@ def plotValues():
     
     plt.subplot(311)
     plt.plot(score)
-    plt.xlabel('Episode number')
+    plt.xlabel('Episode numbmatplotlib.use('Agg')er')
     plt.ylabel('Net score')
     
     
