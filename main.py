@@ -330,7 +330,7 @@ for i in range(EPISODES):
         else :
             next_state = assembleState(game.get_state())
         
-        mems[current_scenario].push(state,action[1],next_state,reward)# Store action[1], understandable by Pytorch
+        mems[current_scenario].push(state.cpu(),action[1].cpu(),next_state.cpu(),reward.cpu())# Store action[1], understandable by Pytorch
         state = next_state
         optimize_model()
 #        print( "\treward:", reward)
