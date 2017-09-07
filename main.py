@@ -285,7 +285,7 @@ def plotValues():
     if len(Q_values) > 1:
         plt.subplot(312)
             
-        Q_values=tuple([*zip(*Q_values)])
+        Q_values=tuple(zip(*Q_values))
         plt.plot(Q_values[0],label = 'Attack branch')
         plt.plot(Q_values[1], label = 'Low health branch')
         
