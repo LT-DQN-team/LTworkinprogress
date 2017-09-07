@@ -328,10 +328,10 @@ for i in range(EPISODES):
         if game.is_episode_finished():
             next_state = None
         else :
-            next_state = assembleState(game.get_state())
+            next_state = assembleState(game.get_state()).cpu() #Can't set a none type to cpu
         
-        mems[current_scenario].push(state.cpu(),action[1].cpu(),next_state.cpu(),reward.cpu())# Store action[1], understandable by Pytorch
-        state = next_state
+        mems[current_scenario].push(state.cpu(),action[1].cpu(),next_state,reward.cpu())# Store action[1], understandable by Pytorch
+        state = next_state.cuda()
         optimize_model()
 #        print( "\treward:", reward)
         
