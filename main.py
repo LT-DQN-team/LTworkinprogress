@@ -49,7 +49,7 @@ Tensor = FloatTensor
 ################## Initialize learning variables ##############################
 
 EPISODES = 70
-MEM_CAPACITY = 5000
+MEM_CAPACITY = 100000
 EPSILON_START = 0.95
 EPSILON_END = 0.05
 EPSILON_DECAY = 1000
@@ -177,20 +177,20 @@ def optimize_model():
         non_final_mask = ByteTensor(tuple(map(lambda s: s is not None,
                                               batch.next_state)))      
         non_final_next_states = Variable(torch.cat([s for s in batch.next_state
-                                                    if s is not None]),
+                                                    if s is not None]).cuda(),
                                          volatile=True)
         #Assemble batches
         
       
-        state_batch = Variable(torch.cat(batch.state))
-        action_batch = Variable(torch.cat(batch.action))
-        reward_batch = Variable(torch.cat(batch.reward))
+        state_batch = Variable(torch.cat(batch.state).cuda())
+        action_batch = Variable(torch.cat(batch.action).cuda())
+        reward_batch = Variable(torch.cat(batch.reward).cuda())
 
         
         #LOSS OF CLASSIFIER
         classification = model(state_batch)[2] #Predicted classification according to the model
         
-        targetC = Variable(Tensor([[i]])) #i is what the classification should actually be, make it a variable
+        targetC = Variable(Tensor([[i]]).cuda()) #i is what the classification should actually be, make it a variable
         
         targetC = targetC.expand_as(classification) #make it match the shape of the classifier output of the model
         lossC += F.smooth_l1_loss(classification,targetC) #Build the , add it so that
