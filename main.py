@@ -49,7 +49,7 @@ Tensor = FloatTensor
 ################## Initialize learning variables ##############################
 
 EPISODES = 70
-MEM_CAPACITY = 10000
+MEM_CAPACITY = 5000
 EPSILON_START = 0.95
 EPSILON_END = 0.05
 EPSILON_DECAY = 1000
