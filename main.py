@@ -275,7 +275,7 @@ def plotValues():
     
     plt.subplot(311)
     plt.plot(score)
-    plt.xlabel('Episode numbmatplotlib.use('Agg')er')
+    plt.xlabel('Episode number')
     plt.ylabel('Net score')
     
     
