@@ -243,8 +243,8 @@ def PerformanceTest():
         
         action,_,out = selectAction_noOracle(state)
         
-        Q=(out[0].max(1)[0].data[0,0],
-                   out[1].max(1)[0].data[0,0],
+        Q=(out[0].max(1)[0].data[0],
+                   out[1].max(1)[0].data[0],
                    out[2].data[0,0])
         game.make_action(action,4)
         if not game.is_episode_finished():
