@@ -250,9 +250,11 @@ def PerformanceTest():
                    out[1].max(1)[0].data[0],
                    out[2].data[0,0])
         game.make_action(action,4)
+        
         if not game.is_episode_finished():
             state = assembleState(game.get_state())
         Q_values.append(Q)
+        print(type(Q[0]))
     
     game.set_episode_timeout(storeDefTimeout)    
     return game.get_total_reward(), Q_values   
@@ -327,7 +329,7 @@ for i in range(EPISODES):
             next_state = None
         else :
             next_state = assembleState(game.get_state())
-        print(type(state),type(action[1]),type(next_state),type(reward))
+        
         mems[current_scenario].push(state,action[1],next_state,reward)# Store action[1], understandable by Pytorch
         state = next_state
         optimize_model()
