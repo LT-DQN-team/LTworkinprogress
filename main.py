@@ -223,6 +223,7 @@ def optimize_model():
     
 def oracle():
     global current_scenario
+    global previous_scenario
     health = game.get_game_variable(GameVariable.HEALTH)
     ammo = game.get_game_variable(GameVariable.SELECTED_WEAPON_AMMO)
     previous_scenario = current_scenario
@@ -246,7 +247,7 @@ def changeConditions():##Make it more rewarding to stay alive when under 50% hea
         
         if current_scenario == 0:
             game.set_living_reward(liv_penalty)
-            print('Changed back to healthy scenario, last reward: ', game.get_last_reward()) #for debug purposes:
+            print('Changed back to healthy scenario, last reward: ', game.get_last_reward(), " and health :", game.get_game_variable(GameVariable.HEALTH)) #for debug purposes:
         else :
             game.set_living_reward(-1 * liv_penalty) 
             
@@ -342,6 +343,7 @@ for i in range(EPISODES):
     game.new_episode()
     state = assembleState(game.get_state())
     current_scenario = 0
+    previous_scenario = 0
     while not game.is_episode_finished():
         
 
