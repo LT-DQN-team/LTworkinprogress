@@ -239,15 +239,17 @@ def oracle():
         
     
        
-def changeConditions():##Make it more rewarding to stay alive when under 50% health
+def changeConditions(silent = False):##Make it more rewarding to stay alive when under 50% health
     global current_scenario
     global previous_scenario
     if previous_scenario!=current_scenario:
-        print('scenario changed')
+        if not silent :
+            print('scenario changed')
         
         if current_scenario == 0:
             game.set_living_reward(liv_penalty)
-            print('Changed back to healthy scenario, last reward: ', game.get_last_reward(), " and health :", game.get_game_variable(GameVariable.HEALTH)) #for debug purposes:
+            if not silent :
+                print('Changed back to healthy scenario, last reward: ', game.get_last_reward(), " and health :", game.get_game_variable(GameVariable.HEALTH)) #for debug purposes:
         else :
             game.set_living_reward(-1 * liv_penalty) 
             
@@ -271,7 +273,7 @@ def PerformanceTest():
         action,_,out = selectAction_noOracle(state)
         current_scenario = out[2].data[0,0]
         
-        changeConditions() #Still necessary to make living more profitable when under 50% health
+        changeConditions(silent = True) #Still necessary to make living more profitable when under 50% health
         Q=(out[0].max(1)[0].data[0],
                    out[1].max(1)[0].data[0],
                    out[2].data[0,0])
