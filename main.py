@@ -267,9 +267,10 @@ def PerformanceTest():
     previous_scenario = 0
     while not game.is_episode_finished():
         
+        previous_scenario = current_scenario
         action,_,out = selectAction_noOracle(state)
         current_scenario = out[2].data[0,0]
-        previous_scenario = current_scenario
+        
         changeConditions() #Still necessary to make living more profitable when under 50% health
         Q=(out[0].max(1)[0].data[0],
                    out[1].max(1)[0].data[0],
