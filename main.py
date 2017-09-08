@@ -227,14 +227,14 @@ def oracle():
     if (health < 50):
         
         current_scenario = 1
-        print('changed to survival scenario with health:',health)
+        print('survival scenario with health:',health)
     
     else :
         
         current_scenario = 0
         
     if previous!=current_scenario:
-       
+       print('scenario changed')
         
 #############################     TESTING FUNCTIONS ###########################
 def PerformanceTest():
