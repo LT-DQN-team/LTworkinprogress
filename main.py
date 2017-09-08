@@ -58,6 +58,8 @@ GAMMA = 0.9
 LR = 0.00005
 epsilon = EPSILON_START
 current_scenario = 0
+previous_scenario = 0
+liv_penalty = -0.4
 variableSize = game.get_available_game_variables_size() #get how many variables are available for later use
 possibleButtonSize = game.get_available_buttons_size() #get how many buttons are available
 
@@ -223,22 +225,37 @@ def oracle():
     global current_scenario
     health = game.get_game_variable(GameVariable.HEALTH)
     ammo = game.get_game_variable(GameVariable.SELECTED_WEAPON_AMMO)
-    previous = current_scenario
+    previous_scenario = current_scenario
     if (health < 50):
         
         current_scenario = 1
-        print('survival scenario with health:',health)
+        
     
     else :
         
         current_scenario = 0
         
-    if previous!=current_scenario:
-       print('scenario changed')
+        
+    
+       
+def changeConditions():##Make it more rewarding to stay alive when under 50% health
+    global current_scenario
+    global previous_scenario
+    if previous_scenario!=current_scenario:
+        print('scenario changed')
+        
+        if current_scenario == 0:
+            game.set_living_reward(liv_penalty)
+            print('Changed back to healthy scenario, last reward: ', game.get_last_reward()) #for debug purposes:
+        else :
+            game.set_living_reward(-1 * liv_penalty) 
+            
+        
+
         
 #############################     TESTING FUNCTIONS ###########################
 def PerformanceTest():
-    
+    global current_scenario
     storeDefTimeout = game.get_episode_timeout()
     game.set_episode_timeout(10000)
     Q_values = []
@@ -248,7 +265,8 @@ def PerformanceTest():
     while not game.is_episode_finished():
         
         action,_,out = selectAction_noOracle(state)
-        
+        current_scenario = out[2].data[0,0]
+        changeConditions()
         Q=(out[0].max(1)[0].data[0],
                    out[1].max(1)[0].data[0],
                    out[2].data[0,0])
@@ -320,10 +338,12 @@ for i in range(EPISODES):
     
     game.new_episode()
     state = assembleState(game.get_state())
+    current_scenario = 0
     while not game.is_episode_finished():
         
 
         oracle()
+        changeConditions()
         action = selectAction(state)        
         reward = game.make_action(action[0],3) #pass action[0], understanble by Vizdoom
        
