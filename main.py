@@ -256,17 +256,20 @@ def changeConditions():##Make it more rewarding to stay alive when under 50% hea
 #############################     TESTING FUNCTIONS ###########################
 def PerformanceTest():
     global current_scenario
+    global previous_scenario
     storeDefTimeout = game.get_episode_timeout()
     game.set_episode_timeout(10000)
     Q_values = []
     game.new_episode()
     state = assembleState(game.get_state())
     current_scenario = 0
+    previous_scenario = 0
     while not game.is_episode_finished():
         
         action,_,out = selectAction_noOracle(state)
         current_scenario = out[2].data[0,0]
-        changeConditions()
+        previous_scenario = current_scenario
+        changeConditions() #Still necessary to make living more profitable when under 50% health
         Q=(out[0].max(1)[0].data[0],
                    out[1].max(1)[0].data[0],
                    out[2].data[0,0])
