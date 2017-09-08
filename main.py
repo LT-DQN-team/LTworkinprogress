@@ -249,7 +249,7 @@ def PerformanceTest():
         Q=(out[0].max(1)[0].data[0],
                    out[1].max(1)[0].data[0],
                    out[2].data[0,0])
-        game.make_action(action,4)
+        game.make_action(action,3)
         
         if not game.is_episode_finished():
             state = assembleState(game.get_state())
@@ -322,7 +322,7 @@ for i in range(EPISODES):
 
         oracle()
         action = selectAction(state)        
-        reward = game.make_action(action[0],4) #pass action[0], understanble by Vizdoom
+        reward = game.make_action(action[0],3) #pass action[0], understanble by Vizdoom
        
         reward = Tensor([reward]) #wrap reward in Tensor for optimizer
         if game.is_episode_finished():
@@ -339,7 +339,7 @@ for i in range(EPISODES):
         time.sleep(0.02)        
         ticks += 1
         
-        if(ticks % 1000==0):
+        if(ticks % 100==0):
             target.load_state_dict(deepcopy(model.state_dict()))#update target
     print ("Result:", game.get_total_reward())
     time.sleep(2)
