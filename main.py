@@ -223,16 +223,18 @@ def oracle():
     global current_scenario
     health = game.get_game_variable(GameVariable.HEALTH)
     ammo = game.get_game_variable(GameVariable.SELECTED_WEAPON_AMMO)
-    
-    if (health < 50) | (ammo < 20):
+    previous = current_scenario
+    if (health < 50):
         
         current_scenario = 1
+        print('changed to survival scenario with health:',health)
     
     else :
         
         current_scenario = 0
         
-        
+    if previous!=current_scenario:
+       
         
 #############################     TESTING FUNCTIONS ###########################
 def PerformanceTest():
@@ -242,6 +244,7 @@ def PerformanceTest():
     Q_values = []
     game.new_episode()
     state = assembleState(game.get_state())
+    current_scenario = 0
     while not game.is_episode_finished():
         
         action,_,out = selectAction_noOracle(state)
