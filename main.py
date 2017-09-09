@@ -364,8 +364,11 @@ for i in range(EPISODES):
         
         mems[current_scenario].push(state.cpu(),action[1].cpu(),next_state,reward.cpu())# Store action[1], understandable by Pytorch
         state = next_state_gpu
-        optimize_model()
-#        print( "\treward:", reward)
+		print( "action:", action[0])
+		if(ticks % 3 ==0):
+			optimize_model() ##Only optimize every three ticks
+			print("Optimized")
+        
         
         time.sleep(0.02)        
         ticks += 1
