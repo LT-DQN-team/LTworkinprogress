@@ -36,6 +36,7 @@ game.load_config("scenarios/custom.cfg")
 
 game.init()
 game.send_game_command('sv_infiniteammo 1')
+game.set_death_penalty(500)
 
 ################## Initialize tuples and tensors ##############################
 
