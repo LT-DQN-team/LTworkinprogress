@@ -15,6 +15,7 @@ import torch
 from collections import deque
 from collections import namedtuple
 from DQN import DQN
+import networkHandler as nH
 from torch.autograd import Variable
 from memory import ReplayMemory
 from copy import deepcopy
@@ -50,7 +51,7 @@ Tensor = FloatTensor
 
 ################## Initialize learning variables ##############################
 
-EPISODES = 70
+EPISODES = 700
 MEM_CAPACITY = 100000
 EPSILON_START = 0.95
 EPSILON_END = 0.05
@@ -383,4 +384,5 @@ for i in range(EPISODES):
     testNetwork()
     centerBuffer.resetBuffer()
     overallBuffer.resetBuffer()
+    nH.saveNetwork(model)
     
