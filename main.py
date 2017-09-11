@@ -33,8 +33,9 @@ from IPython import display
 ticks = 0
 game = DoomGame()
 game.load_config("scenarios/custom.cfg")
-game.set_render_hud(False)
+
 game.init()
+game.send_game_command('sv_infiniteammo 1')
 
 ################## Initialize tuples and tensors ##############################
 
