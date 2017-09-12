@@ -36,7 +36,7 @@ game = DoomGame()
 game.load_config("scenarios/custom.cfg")
 
 game.init()
-game.send_game_command('sv_infiniteammo 1')
+
 game.set_death_penalty(500)
 
 ################## Initialize tuples and tensors ##############################
@@ -79,6 +79,7 @@ if use_cuda:
     target.cuda()
 
 optimizer=optim.RMSprop(model.parameters(),lr=LR)
+
 
 ################## Class definitions ##########################################
 
@@ -230,7 +231,7 @@ def oracle():
     health = game.get_game_variable(GameVariable.HEALTH)
     ammo = game.get_game_variable(GameVariable.SELECTED_WEAPON_AMMO)
     previous_scenario = current_scenario
-    if (health < 50):
+    if (health < 50) | (ammo < 10):
         
         current_scenario = 1
         
@@ -263,8 +264,7 @@ def changeConditions(silent = False):##Make it more rewarding to stay alive when
 def PerformanceTest():
     global current_scenario
     global previous_scenario
-    storeDefTimeout = game.get_episode_timeout()
-    game.set_episode_timeout(10000)
+    
     Q_values = []
     game.new_episode()
     state = assembleState(game.get_state())
@@ -287,7 +287,7 @@ def PerformanceTest():
         Q_values.append(Q)
         
     
-    game.set_episode_timeout(storeDefTimeout)    
+        
     return game.get_total_reward(), Q_values   
 
 score = []       
@@ -336,6 +336,7 @@ def plotValues():
     
     fig.set_size_inches(8, 15)
     fig.savefig('graphs/graph.PNG')
+    plt.close()
 
 def testNetwork():
     global model
@@ -368,6 +369,7 @@ for i in range(EPISODES):
         
         mems[current_scenario].push(state.cpu(),action[1].cpu(),next_state,reward.cpu())# Store action[1], understandable by Pytorch
         state = next_state_gpu
+        
 		# print('action:',action[0])
         if(ticks%3 == 0):
             optimize_model() ##Only optimize every three ticks
