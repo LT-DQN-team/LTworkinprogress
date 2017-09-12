@@ -318,7 +318,10 @@ def PerformanceTest():
         Q_values.append(Q)
         
     print(aCounterTest)
-    fileTest.write(str(aCounterTest))
+    
+    with open("actionCountingTest.txt","a") as f:
+        
+        f.write(str(aCounterTest))
     aCounterTest.reset()    
     return game.get_total_reward(), Q_values   
 
@@ -418,7 +421,9 @@ for i in range(EPISODES):
     time.sleep(2)
     print("In training:")
     print(aCounter)
-    file.write(str(aCounter))
+    with open("actionCounting.txt","a") as f:
+        
+        f.write(str(aCounter))
     aCounter.reset() 
     testNetwork()
     centerBuffer.resetBuffer()
