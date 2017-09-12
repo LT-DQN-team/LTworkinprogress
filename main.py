@@ -9,6 +9,7 @@ Created on Tue Aug 29 16:00:14 2017
 from vizdoom import *
 import random
 import time
+from operator import add
 
 import graphics
 import torch
@@ -50,7 +51,7 @@ IntTensor = torch.cuda.IntTensor if use_cuda else torch.IntTensor
 Tensor = FloatTensor
 
 ################## Initialize learning variables ##############################
-
+episodeNumber = 0
 EPISODES = 700
 MEM_CAPACITY = 100000
 EPSILON_START = 0.95
@@ -97,11 +98,41 @@ class Buffer():#Creates a buffer class with inherent ability of appending new da
             
     def add(self,newState):
         self.buffer.append(newState)
+        
+class actionCounter(object):#For debug purposes
+    
+    def __init__(self):
+        self.actionMap = model.actionMap #To make sense of the counter
+        self.counter = [0] * len(self.actionMap) #Will count the number of time an action is taken
+        self.totalCounter = [0] * len(self.actionMap)
+        
+    def reset(self):
+        self.totalCounter = list(map(add,self.counter,self.totalCounter))
+        self.counter = [0] * len(self.actionMap)
+        
+    
+    def update(self,actionIndex): #Takes a Pytorch action in
+        
+        self.counter[actionIndex] += 1
+    
+    def __str__(self):
+        
+        out = "\nEpisode "+str(episodeNumber)+" \n Action array -------------------------------- Times chosen per episode"
+        for i in range(len(self.counter)):
+            
+            out +="\n" + str(self.actionMap[i]) + " --------------- " + str(self.counter[i]) + "( " + str( self.totalCounter[i] + self.counter[i]) +" in total)"
+            
+        return out
+        
        
 ################## Class declarations ######################################### 
   
 centerBuffer = Buffer() #Initialize both buffers globally
 overallBuffer = Buffer()
+aCounterTest = actionCounter()
+aCounter = actionCounter()
+fileTest = open("actionCountingTest.txt","a") 
+file = open("actionCounting.txt","a")
 
 ################## Input manipulation functions ###############################
 
@@ -273,9 +304,9 @@ def PerformanceTest():
     while not game.is_episode_finished():
         
         previous_scenario = current_scenario
-        action,_,out = selectAction_noOracle(state)
+        action,aIndex,out = selectAction_noOracle(state)
         current_scenario = out[2].data[0,0]
-        
+        aCounterTest.update(aIndex[0,0])
         changeConditions(silent = True) #Still necessary to make living more profitable when under 50% health
         Q=(out[0].max(1)[0].data[0],
                    out[1].max(1)[0].data[0],
@@ -286,8 +317,9 @@ def PerformanceTest():
             state = assembleState(game.get_state())
         Q_values.append(Q)
         
-    
-        
+    print(aCounterTest)
+    fileTest.write(str(aCounterTest))
+    aCounterTest.reset()    
     return game.get_total_reward(), Q_values   
 
 score = []       
@@ -359,7 +391,7 @@ for i in range(EPISODES):
         action = selectAction(state) 
         
         reward = game.make_action(action[0],3) #pass action[0], understanble by Vizdoom
-       
+        aCounter.update(action[1][0,0])
         reward = Tensor([reward]) #wrap reward in Tensor for optimizer
         if game.is_episode_finished():
             next_state = None
@@ -382,9 +414,15 @@ for i in range(EPISODES):
         if(ticks % 100==0):
             target.load_state_dict(deepcopy(model.state_dict()))#update target
     print ("Result:", game.get_total_reward())
+    
     time.sleep(2)
+    print("In training:")
+    print(aCounter)
+    file.write(str(aCounter))
+    aCounter.reset() 
     testNetwork()
     centerBuffer.resetBuffer()
     overallBuffer.resetBuffer()
     nH.saveNetwork(model)
+    episodeNumber += 1
     
