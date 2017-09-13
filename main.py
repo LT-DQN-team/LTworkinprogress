@@ -237,7 +237,8 @@ def optimize_model():
         state_action_values = model(state_batch)[i].gather(1, action_batch) #Prediction, what the expected Q-value is by following policy 
         
         next_state_values = Variable(torch.zeros(BATCH_SIZE).type(Tensor))        
-        next_state_values[non_final_mask] = target(non_final_next_states)[i].max(1)[0] #Target, what the max Q-value at the next state actually is 
+#        next_state_values[non_final_mask] = target(non_final_next_states)[i].max(1)[0] #Target, what the max Q-value at the next state actually is 
+        next_state_values[non_final_mask] = model(non_final_next_states)[i].max(1)[0]
         next_state_values.volatile = False
         expected_state_action_values = (next_state_values * GAMMA) + reward_batch #so if following the policy, 
         #the value of the current state will be the reward you get by following the policy + the value of the next state (discounted)
@@ -414,8 +415,8 @@ for i in range(EPISODES):
         time.sleep(0.02)        
         ticks += 1
         
-        if(ticks % 100==0):
-            target.load_state_dict(deepcopy(model.state_dict()))#update target
+#        if(ticks % 100==0):
+#            target.load_state_dict(deepcopy(model.state_dict()))#update target
     print ("Result:", game.get_total_reward())
     
     time.sleep(2)
