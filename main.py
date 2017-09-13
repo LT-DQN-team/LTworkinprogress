@@ -56,7 +56,7 @@ EPISODES = 700
 MEM_CAPACITY = 100000
 EPSILON_START = 0.95
 EPSILON_END = 0.05
-EPSILON_DECAY = 1000
+EPSILON_DECAY = 10000
 BATCH_SIZE = 64
 GAMMA = 0.9
 LR = 0.0005
@@ -169,7 +169,7 @@ def selectAction(state):#Tested,working
     global epsilon
     
     if epsilon >= EPSILON_END:#epsilon value update
-        epsilon = EPSILON_START - EPSILON_END/EPSILON_DECAY*ticks 
+        epsilon = EPSILON_END + (EPSILON_START - EPSILON_END)/EPSILON_DECAY*ticks 
         
     sample = random.random()
     
