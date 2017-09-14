@@ -27,19 +27,23 @@ overallCrop = T.Compose([T.CenterCrop(240),T.Scale(120),T.ToTensor()]) #similar,
 
 def grayscale(original):#Tested, works
     #Check if input is already numpy
+       
     if type(original) is np.ndarray :
         
-        new = adaptShape(original)#necessary for the dot operation to work, the RGB dim must be in first position
-        new = np.dot(new[...,:3], [0.299, 0.587, 0.114])
+#        new = adaptShape(original)#necessary for the dot operation to work, the RGB dim must be in first position
+        new = np.dot(original[...,:3], [0.299, 0.587, 0.114])
         new = np.ascontiguousarray(new, dtype = np.int8)
+        
         return new#Using previous technique from Catch
     
     else:#make it numpy and convert back to image
         
         new = np.asarray(original)
-        new = adaptShape(new)
+#        new = adaptShape(new)
         new = np.dot(new[...,:3], [0.299, 0.587, 0.114])
+        
         new = np.ascontiguousarray(new, dtype = np.int8)
+        
         
         return Image.fromarray(new)
 
@@ -48,8 +52,8 @@ def doCenter(original):#Tested,works
     if type(original) is np.ndarray :
         
         new = Image.fromarray(adaptShape(original))
-    
         
+    
     return ctrCrop(grayscale(new)).type(FloatTensor)/255
 
 def doOverall(original):#Tested, works
@@ -68,7 +72,11 @@ def show(im):#Only for troubleshooting
     
     if type(im) is np.ndarray :
         
-        Image.fromarray(im).show()
+        Image.fromarray(np.uint8(im*255)).show()
+        
+    elif type(im) is type(FloatTensor):
+    
+        Image.fromarray(np.uint8(im.squeeze(0).cpu().numpy())*255).show()
         
     else:
         im.show()

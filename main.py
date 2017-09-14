@@ -52,7 +52,7 @@ Tensor = FloatTensor
 
 ################## Initialize learning variables ##############################
 episodeNumber = 0
-EPISODES = 7000
+EPISODES = 4000
 MEM_CAPACITY = 100000
 EPSILON_START = 0.95
 EPSILON_END = 0.05
@@ -63,7 +63,7 @@ LR = 0.00005
 epsilon = EPSILON_START
 current_scenario = 0
 previous_scenario = 0
-liv_penalty = -0.4
+liv_penalty = -0.04
 variableSize = game.get_available_game_variables_size() #get how many variables are available for later use
 possibleButtonSize = game.get_available_buttons_size() #get how many buttons are available
 
@@ -139,8 +139,9 @@ file = open("actionCounting.txt","a")
 def graphicInput(VizState):#Extracts the graphical information from the state info that VIzdoom returns
     
     screen = VizState.screen_buffer
-    centerBuffer.add(graphics.doCenter(screen)) #append the center view into the buffer
-    overallBuffer.add(graphics.doOverall(screen)) #append the overall view into the buffer
+    centerBuffer.add(graphics.doCenter(screen).cuda()) #append the center view into the buffer
+    overallBuffer.add(graphics.doOverall(screen).cuda()) #append the overall view into the buffer
+#    graphics.show(graphics.doOverall(screen).cpu().squeeze(0).numpy())
     #NOTE: no need to unsqueeze the tensors since the former RGB dimension is still present
     
 def variableInput(VizState):#Extracts the variable information
@@ -159,6 +160,10 @@ def assembleState(VizState):#Tested, working     Converts the state info returne
     variables = variableInput(VizState) #Update the variable tensor       
     state_temp = list(centerBuffer.buffer) + list(overallBuffer.buffer) + [variables] #Join them in a sequence of tensors    
     state = torch.cat(state_temp,0) #Concatenate them into a 9 X 64 X 64 tensor
+    
+    
+    
+    
     state.unsqueeze_(0) #add the batch dimension
    
     return state
@@ -174,6 +179,7 @@ def selectAction(state):#Tested,working
     sample = random.random()
     
     if sample > epsilon:
+        
         
         action_index = model(Variable(state, volatile=True).type(FloatTensor))[current_scenario].data.max(1)[1].view(1, 1) #get the index of the output with the highest predicted Q-value
         action = model.indexInterpreter(action_index[0,0])#Translate this index into a combination of button activation
@@ -193,6 +199,7 @@ def selectAction_noOracle(state):
     current_scenario = round(out[2].data[0,0])
     if current_scenario>1:#Preventing the classifier from being any other value than 0 or 1
             current_scenario = 1
+   
     action_index = out[current_scenario].data.max(1)[1].view(1, 1) #get the index of the output with the highest predicted Q-value
     action = model.indexInterpreter(action_index[0,0])#Translate this index into a combination of button activation
         
@@ -371,7 +378,7 @@ def plotValues():
     fig=plt.gcf()
     
     fig.set_size_inches(8, 15)
-    fig.savefig('graphs/graph.PNG')
+    fig.savefig('graphs/graphTest.PNG')
     plt.close()
 
 def testNetwork():
