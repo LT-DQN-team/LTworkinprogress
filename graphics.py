@@ -31,7 +31,7 @@ def grayscale(original):#Tested, works
     if type(original) is np.ndarray :
         
 #        new = adaptShape(original)#necessary for the dot operation to work, the RGB dim must be in first position
-        new = np.dot(new[...,:3], [0.299, 0.587, 0.114])
+        new = np.dot(original[...,:3], [0.299, 0.587, 0.114])
         new = np.ascontiguousarray(new, dtype = np.int8)
         
         return new#Using previous technique from Catch
