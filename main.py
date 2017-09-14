@@ -139,8 +139,8 @@ file = open("actionCounting.txt","a")
 def graphicInput(VizState):#Extracts the graphical information from the state info that VIzdoom returns
     
     screen = VizState.screen_buffer
-    centerBuffer.add(graphics.doCenter(screen)) #append the center view into the buffer
-    overallBuffer.add(graphics.doOverall(screen)) #append the overall view into the buffer
+    centerBuffer.add(graphics.doCenter(screen).cuda()) #append the center view into the buffer
+    overallBuffer.add(graphics.doOverall(screen).cuda()) #append the overall view into the buffer
     #NOTE: no need to unsqueeze the tensors since the former RGB dimension is still present
     
 def variableInput(VizState):#Extracts the variable information

@@ -30,9 +30,9 @@ class DQN(nn.Module):#Working, all layer sizes have been checked
         
         self.actionMap = list(itertools.product([0,1],repeat = possibleButtonSize)) #from https://stackoverflow.com/questions/14931769/how-to-get-all-combination-of-n-binary-value
         
-        #Cleanup actions involving pressing more than two buttons at once
+        #Cleanup actions involving pressing more than %one% button at once
             
-        self.actionMap = [x for x in self.actionMap if sum(x) < 3]
+        self.actionMap = [x for x in self.actionMap if sum(x) < 2]
               
         
         #First, the shared convolutional layers, only for graphical data
