@@ -63,7 +63,7 @@ LR = 0.00005
 epsilon = EPSILON_START
 current_scenario = 0
 previous_scenario = 0
-liv_penalty = -0.4
+liv_penalty = -0.04
 variableSize = game.get_available_game_variables_size() #get how many variables are available for later use
 possibleButtonSize = game.get_available_buttons_size() #get how many buttons are available
 
