@@ -37,7 +37,7 @@ game = DoomGame()
 game.load_config("scenarios/custom.cfg")
 
 game.init()
-
+game.send_game_command("sv_infiniteammo = true")
 game.set_death_penalty(500)
 
 ################## Initialize tuples and tensors ##############################
@@ -189,10 +189,10 @@ def selectAction(state):#Tested,working
     
     else:
         
-        action_index = ByteTensor([[random.randint(0, len(model.actionMap)-1)]])
+        action_index = LongTensor([[random.randint(0, len(model.actionMap)-1)]])
         action = model.indexInterpreter(action_index[0,0]) #Translate this index into a combination of button activation
         
-        return action,action_index.type(ByteTensor)
+        return action,action_index
 
 def selectAction_noOracle(state):
     out = model(Variable(state, volatile=True).type(FloatTensor))
@@ -222,12 +222,12 @@ def optimize_model():
         non_final_mask = ByteTensor(tuple(map(lambda s: s is not None,
                                               batch.next_state)))      
         non_final_next_states = Variable(torch.cat([s for s in batch.next_state
-                                                    if s is not None]).cuda(),
+                                                    if s is not None]).type(Tensor)/255,
                                          volatile=True)
         #Assemble batches
         
       
-        state_batch = Variable(torch.cat(batch.state).cuda())
+        state_batch = Variable(torch.cat(batch.state).type(Tensor)/255)
         action_batch = Variable(torch.cat(batch.action).cuda())
         reward_batch = Variable(torch.cat(batch.reward).cuda())
 
@@ -245,8 +245,8 @@ def optimize_model():
         state_action_values = model(state_batch)[i].gather(1, action_batch) #Prediction, what the expected Q-value is by following policy 
         
         next_state_values = Variable(torch.zeros(BATCH_SIZE).type(Tensor))        
-#        next_state_values[non_final_mask] = target(non_final_next_states)[i].max(1)[0] #Target, what the max Q-value at the next state actually is 
-        next_state_values[non_final_mask] = model(non_final_next_states)[i].max(1)[0]
+        next_state_values[non_final_mask] = target(non_final_next_states)[i].max(1)[0] #Target, what the max Q-value at the next state actually is 
+#        next_state_values[non_final_mask] = model(non_final_next_states)[i].max(1)[0]
         next_state_values.volatile = False
         expected_state_action_values = (next_state_values * GAMMA) + reward_batch #so if following the policy, 
         #the value of the current state will be the reward you get by following the policy + the value of the next state (discounted)
@@ -423,8 +423,8 @@ for i in range(EPISODES):
         time.sleep(0.02)        
         ticks += 1
         
-#        if(ticks % 100==0):
-#            target.load_state_dict(deepcopy(model.state_dict()))#update target
+        if(ticks % 100==0):
+            target.load_state_dict(deepcopy(model.state_dict()))#update target
     print ("Result:", game.get_total_reward())
     
     time.sleep(2)
