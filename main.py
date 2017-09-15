@@ -37,7 +37,7 @@ game = DoomGame()
 game.load_config("scenarios/custom.cfg")
 
 game.init()
-
+game.send_game_command("sv_infiniteammo = true")
 game.set_death_penalty(500)
 
 ################## Initialize tuples and tensors ##############################
@@ -52,7 +52,7 @@ Tensor = FloatTensor
 
 ################## Initialize learning variables ##############################
 episodeNumber = 0
-EPISODES = 4000
+EPISODES = 7000
 MEM_CAPACITY = 100000
 EPSILON_START = 0.95
 EPSILON_END = 0.05
@@ -150,7 +150,7 @@ def variableInput(VizState):#Extracts the variable information
     variables = Tensor(VizState.game_variables)
     
     for i in range(variableSize): #Replace as many zeros as needed by a variable value until there are no more variables to put in
-        varTens[i] = variables[i]  
+        varTens[i] = variables[i]/255 #Need to scale the variables in a similar fashion as the pixels
  
     return varTens.unsqueeze(0) #Add the usual 3D dimension
 
@@ -160,6 +160,9 @@ def assembleState(VizState):#Tested, working     Converts the state info returne
     variables = variableInput(VizState) #Update the variable tensor       
     state_temp = list(centerBuffer.buffer) + list(overallBuffer.buffer) + [variables] #Join them in a sequence of tensors    
     state = torch.cat(state_temp,0) #Concatenate them into a 9 X 64 X 64 tensor
+    
+    
+    
     
     
     state.unsqueeze_(0) #add the batch dimension
@@ -179,7 +182,7 @@ def selectAction(state):#Tested,working
     if sample > epsilon:
         
         
-        action_index = model(Variable(state, volatile=True).type(FloatTensor))[current_scenario].data.max(1)[1].view(1, 1) #get the index of the output with the highest predicted Q-value
+        action_index = model(Variable(state, volatile=True).type(Tensor))[current_scenario].data.max(1)[1].view(1, 1) #get the index of the output with the highest predicted Q-value
         action = model.indexInterpreter(action_index[0,0])#Translate this index into a combination of button activation
         
         return action,action_index #Need to return both, action for VizDoom to understand, and action_index for the memory and later training
@@ -219,12 +222,12 @@ def optimize_model():
         non_final_mask = ByteTensor(tuple(map(lambda s: s is not None,
                                               batch.next_state)))      
         non_final_next_states = Variable(torch.cat([s for s in batch.next_state
-                                                    if s is not None]).cuda(),
+                                                    if s is not None]).type(Tensor)/255,
                                          volatile=True)
         #Assemble batches
         
       
-        state_batch = Variable(torch.cat(batch.state).cuda())
+        state_batch = Variable(torch.cat(batch.state).type(Tensor)/255)
         action_batch = Variable(torch.cat(batch.action).cuda())
         reward_batch = Variable(torch.cat(batch.reward).cuda())
 
@@ -242,8 +245,8 @@ def optimize_model():
         state_action_values = model(state_batch)[i].gather(1, action_batch) #Prediction, what the expected Q-value is by following policy 
         
         next_state_values = Variable(torch.zeros(BATCH_SIZE).type(Tensor))        
-#        next_state_values[non_final_mask] = target(non_final_next_states)[i].max(1)[0] #Target, what the max Q-value at the next state actually is 
-        next_state_values[non_final_mask] = model(non_final_next_states)[i].max(1)[0]
+        next_state_values[non_final_mask] = target(non_final_next_states)[i].max(1)[0] #Target, what the max Q-value at the next state actually is 
+#        next_state_values[non_final_mask] = model(non_final_next_states)[i].max(1)[0]
         next_state_values.volatile = False
         expected_state_action_values = (next_state_values * GAMMA) + reward_batch #so if following the policy, 
         #the value of the current state will be the reward you get by following the policy + the value of the next state (discounted)
@@ -405,11 +408,11 @@ for i in range(EPISODES):
         if game.is_episode_finished():
             next_state = None
         else :
-            next_state_gpu = assembleState(game.get_state()) #Can't set a none type to cpu
-            next_state = next_state_gpu.cpu()
+            next_state = assembleState(game.get_state()) #Can't set a none type to cpu
+            
         
-        mems[current_scenario].push(state.cpu(),action[1].cpu(),next_state,reward.cpu())# Store action[1], understandable by Pytorch
-        state = next_state_gpu
+        mems[current_scenario].push(state,action[1],next_state,reward)# Store action[1], understandable by Pytorch
+        state = next_state
         
 		# print('action:',action[0])
         if(ticks%3 == 0):
@@ -420,8 +423,8 @@ for i in range(EPISODES):
         time.sleep(0.02)        
         ticks += 1
         
-#        if(ticks % 100==0):
-#            target.load_state_dict(deepcopy(model.state_dict()))#update target
+        if(ticks % 100==0):
+            target.load_state_dict(deepcopy(model.state_dict()))#update target
     print ("Result:", game.get_total_reward())
     
     time.sleep(2)

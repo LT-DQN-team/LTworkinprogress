@@ -40,7 +40,6 @@ def grayscale(original):#Tested, works
         
         new = np.asarray(original)
 #        new = adaptShape(new)
-        
         new = np.dot(new[...,:3], [0.299, 0.587, 0.114])
         
         new = np.ascontiguousarray(new, dtype = np.int8)
@@ -76,8 +75,7 @@ def show(im):#Only for troubleshooting
         Image.fromarray(np.uint8(im*255)).show()
         
     elif type(im) is torch.cuda.FloatTensor:
-        
-        
+    
         Image.fromarray(im.squeeze(0).cpu().numpy()*255).show()
         
     else:
