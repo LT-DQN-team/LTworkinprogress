@@ -77,8 +77,8 @@ def show(im):#Only for troubleshooting
         
     elif type(im) is torch.cuda.FloatTensor:
         
-        print((np.uint8(im.squeeze(0).cpu().numpy())*255).shape)
-        Image.fromarray(np.uint8(im.squeeze(0).cpu().numpy())).show()
+        
+        Image.fromarray(im.squeeze(0).cpu().numpy()*255).show()
         
     else:
         im.show()

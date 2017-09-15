@@ -161,11 +161,7 @@ def assembleState(VizState):#Tested, working     Converts the state info returne
     state_temp = list(centerBuffer.buffer) + list(overallBuffer.buffer) + [variables] #Join them in a sequence of tensors    
     state = torch.cat(state_temp,0) #Concatenate them into a 9 X 64 X 64 tensor
     
-    stateshow = torch.cat(state_temp,1)
     
-    graphics.show(stateshow)
-    
-    time.sleep(2)
     state.unsqueeze_(0) #add the batch dimension
    
     return state
