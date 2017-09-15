@@ -150,7 +150,7 @@ def variableInput(VizState):#Extracts the variable information
     variables = Tensor(VizState.game_variables)
     
     for i in range(variableSize): #Replace as many zeros as needed by a variable value until there are no more variables to put in
-        varTens[i] = variables[i]  
+        varTens[i] = variables[i]/255 #Need to scale the variables in a similar fashion as the pixels
  
     return varTens.unsqueeze(0) #Add the usual 3D dimension
 
@@ -160,9 +160,8 @@ def assembleState(VizState):#Tested, working     Converts the state info returne
     variables = variableInput(VizState) #Update the variable tensor       
     state_temp = list(centerBuffer.buffer) + list(overallBuffer.buffer) + [variables] #Join them in a sequence of tensors    
     state = torch.cat(state_temp,0) #Concatenate them into a 9 X 64 X 64 tensor
-    stateshow = torch.cat(state_temp,1)
-    graphics.show(stateshow)
-    time.sleep(2)
+    
+    
     
     
     
@@ -183,17 +182,17 @@ def selectAction(state):#Tested,working
     if sample > epsilon:
         
         
-        action_index = model(Variable(state, volatile=True).type(FloatTensor))[current_scenario].data.max(1)[1].view(1, 1) #get the index of the output with the highest predicted Q-value
+        action_index = model(Variable(state, volatile=True).type(Tensor))[current_scenario].data.max(1)[1].view(1, 1) #get the index of the output with the highest predicted Q-value
         action = model.indexInterpreter(action_index[0,0])#Translate this index into a combination of button activation
         
         return action,action_index #Need to return both, action for VizDoom to understand, and action_index for the memory and later training
     
     else:
         
-        action_index = LongTensor([[random.randint(0, len(model.actionMap)-1)]])
+        action_index = ByteTensor([[random.randint(0, len(model.actionMap)-1)]])
         action = model.indexInterpreter(action_index[0,0]) #Translate this index into a combination of button activation
         
-        return action,action_index
+        return action,action_index.type(ByteTensor)
 
 def selectAction_noOracle(state):
     out = model(Variable(state, volatile=True).type(FloatTensor))
@@ -409,11 +408,11 @@ for i in range(EPISODES):
         if game.is_episode_finished():
             next_state = None
         else :
-            next_state_gpu = assembleState(game.get_state()) #Can't set a none type to cpu
-            next_state = next_state_gpu.cpu()
+            next_state = assembleState(game.get_state()) #Can't set a none type to cpu
+            
         
-        mems[current_scenario].push(state.cpu(),action[1].cpu(),next_state,reward.cpu())# Store action[1], understandable by Pytorch
-        state = next_state_gpu
+        mems[current_scenario].push(state,action[1],next_state,reward)# Store action[1], understandable by Pytorch
+        state = next_state
         
 		# print('action:',action[0])
         if(ticks%3 == 0):
